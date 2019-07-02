@@ -22,7 +22,7 @@ namespace Sucrose.Avro.CodeGen
 			string registryUrl,
 			string subjectPattern = ".*",
 			string outputDir = ".",
-			IEnumerable<string> namespaceMapping = null
+			string[] namespaceMapping = null
 		)
 		{
 			try
