@@ -17,10 +17,12 @@ namespace Sucrose.Avro.CodeGen
 		/// <param name="registryUrl">The Schema Registry URl</param>
 		/// <param name="subjectPattern">Regex pattern to determine which schemas to retrieve</param>
 		/// <param name="outputDir">Output directory where to output the generated C# classes</param>
+		/// <param name="namespaceMapping">Map namespace from Producer's to Consumer's e.g. com.user:Sucrose.User</param>
 		static async Task<int> Main(
 			string registryUrl,
 			string subjectPattern = ".*",
-			string outputDir = "."
+			string outputDir = ".",
+			IEnumerable<string> namespaceMapping = null
 		)
 		{
 			try
@@ -36,14 +38,9 @@ namespace Sucrose.Avro.CodeGen
 					.Select(async subject => await registry.GetLatestSchemaAsync(subject));
 
 				var schemas = await Task.WhenAll(schemaPromises);
-				foreach (var schema in schemas)
-				{
-					GenerateClasses(
-						schema.SchemaString,
-						outputDir,
-						new Dictionary<string, string>()
-					);
-				}
+				await Task.WhenAll(
+					schemas.Select(schema => GenerateClasses(schema.SchemaString, outputDir, namespaceMapping))
+				);
 
 				return 0;
 			}
@@ -54,22 +51,29 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static void GenerateClasses(
+		private static Task GenerateClasses(
 			string rawSchema,
 			string outputDir,
-			Dictionary<string, string> namespaceMapping
-		)
-		{
-			var codeGen = new CodeGen();
-			var schema = Schema.Parse(rawSchema);
+			IEnumerable<string> namespaceMapping
+		) => Task.Run(() =>
+			{
+				var codeGen = new CodeGen();
+				var schema = Schema.Parse(rawSchema);
 
-			codeGen.AddSchema(schema);
+				codeGen.AddSchema(schema);
 
-			foreach (var (key, value) in namespaceMapping)
-				codeGen.NamespaceMapping[key] = value;
+				if (namespaceMapping != null)
+				{
+					foreach (var mapping in namespaceMapping)
+					{
+						var parts = mapping.Split(':');
+						codeGen.NamespaceMapping[parts[0]] = parts[1];
+					}
+				}
 
-			codeGen.GenerateCode();
-			codeGen.WriteTypes(outputDir);
-		}
+				codeGen.GenerateCode();
+				codeGen.WriteTypes(outputDir);
+			});
+
 	}
 }

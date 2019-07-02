@@ -10,13 +10,21 @@
   <!--vendor-->
   <ItemGroup>
     <PackageReference Include="Apache.Avro" Version="1.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" /> <!-- todo: should be removed -->
+    <PackageReference Include="System.Net.Http" Version="4.3.0" /> <!-- todo: should be removed -->
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.3.0-alpha.19317.1" />
-    <PackageReference Include="Confluent.SchemaRegistry" Version="1.1.0" />
+    <!-- <PackageReference Include="Confluent.SchemaRegistry" Version="1.1.0" /> --> 
   </ItemGroup>
 
   <!--libs-->
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <ProjectReference Include="..\confluent-kafka-dotnet-jonny\src\Confluent.SchemaRegistry\Confluent.SchemaRegistry.csproj" />
+  </ItemGroup>
+
+  <!-- Only temporary until confluent fix the schema regeistry -->
+  <ItemGroup>
+    <Reference Include="Confluent.SchemaRegistry">
+      <HintPath>..\ExternalLibs\Confluent.SchemaRegistry.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
