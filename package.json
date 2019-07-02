@@ -1,8 +1,8 @@
 {
-  "name": "orleans.streams.kafka",
-  "version": "0.9.1",
-  "description": "Orleans Kafka Stream Provider",
-  "solution": "Orleans.Streams.Kafka-build.sln",
+  "name": "sucrose.avro.codegen",
+  "version": "1.0.0",
+  "description": "avromagic auto-magically generates C# classes from an Avro Schema Registry.",
+  "solution": "Sucrose.Avro.CodeGen-build.sln",
   "dependencies": {},
   "devDependencies": {},
   "scripts": {}

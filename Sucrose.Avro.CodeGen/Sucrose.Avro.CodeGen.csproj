@@ -7,13 +7,15 @@
     <ToolCommandName>avromagic</ToolCommandName>
   </PropertyGroup>
 
+  <!--vendor-->
   <ItemGroup>
     <PackageReference Include="Apache.Avro" Version="1.9.0" />
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.3.0-alpha.19317.1" />
     <!-- <PackageReference Include="Confluent.SchemaRegistry" Version="1.1.0" /> -->
   </ItemGroup>
 
-  <ItemGroup>
+  <!--libs-->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <ProjectReference Include="..\..\confluent-kafka-dotnet-jonny\src\Confluent.SchemaRegistry\Confluent.SchemaRegistry.csproj" />
   </ItemGroup>
 

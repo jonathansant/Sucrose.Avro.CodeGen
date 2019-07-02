@@ -12,12 +12,11 @@ namespace Sucrose.Avro.CodeGen
 	class Program
 	{
 		/// <summary>
-		/// avromagic auto-magically generates c# classes from an Avro Schema Registry.
+		/// avromagic auto-magically generates C# classes from an Avro Schema Registry.
 		/// </summary>
 		/// <param name="registryUrl">The Schema Registry URl</param>
-		/// <param name="subjectPattern"></param>
-		/// <param name="outputDir"></param>
-		/// <returns></returns>
+		/// <param name="subjectPattern">Regex pattern to determine which schemas to retrieve</param>
+		/// <param name="outputDir">Output directory where to output the generated C# classes</param>
 		static async Task<int> Main(
 			string registryUrl,
 			string subjectPattern = ".*",
