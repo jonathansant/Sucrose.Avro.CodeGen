@@ -8,7 +8,7 @@
   <PropertyGroup>
     <Authors>Jonathan Sant</Authors>
     <Company>Sucrose</Company>
-    <RepositoryUrl>https://github.com/jonathansant/Orleans.Streams.Kafka</RepositoryUrl>
+    <RepositoryUrl>https://github.com/jonathansant/Sucrose.Avro.CodeGen</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
@@ -26,6 +26,5 @@
 
   <!-- Shared Package Versions -->
   <PropertyGroup>
-    <StreamUtilsVersion>5.*</StreamUtilsVersion>
   </PropertyGroup>
 </Project>

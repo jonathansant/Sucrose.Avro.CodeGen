@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <!--libs-->
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <ProjectReference Include="..\..\confluent-kafka-dotnet-jonny\src\Confluent.SchemaRegistry\Confluent.SchemaRegistry.csproj" />
-  </ItemGroup>
+  <!-- <ItemGroup Condition="'$(Configuration)' == 'Debug'"> -->
+  <!--   <ProjectReference Include="..\..\confluent-kafka-dotnet-jonny\src\Confluent.SchemaRegistry\Confluent.SchemaRegistry.csproj" /> -->
+  <!-- </ItemGroup> -->
 
 </Project>
