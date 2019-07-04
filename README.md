@@ -1,11 +1,11 @@
 # Sucrose.Avro.CodeGen
 
-## Usage
+### Usage
 
 ```
 avromagic \
 --registry-url https://xxx.dev/schema-registry \
 --subject-pattern dev-riverse-.* \
---output-dir ./autogen
+--output-dir ./autogen \
 --namespace-mapping com.somcompany.user:SomeCompany.Realtime
 ```
