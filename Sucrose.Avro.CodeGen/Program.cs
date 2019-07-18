@@ -27,9 +27,23 @@ namespace Sucrose.Avro.CodeGen
 			try
 			{
 				var schemas = await GetSchemas(schemaPath, subjectPattern);
+
+				var codeGen = new global::Avro.CodeGen();
+				if (namespaceMapping != null)
+				{
+					foreach (var mapping in namespaceMapping)
+					{
+						var parts = mapping.Split(':');
+						codeGen.NamespaceMapping[parts[0]] = parts[1];
+					}
+				}
+
 				await Task.WhenAll(
-					schemas.Select(schema => GenerateClasses(schema, outputDir, namespaceMapping))
+					schemas.Select(schema => ParseSchemas(codeGen, schema))
 				);
+
+				codeGen.GenerateCode();
+				codeGen.WriteTypes(outputDir);
 
 				return 0;
 			}
@@ -40,28 +54,13 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static Task GenerateClasses(
-			string rawSchema,
-			string outputDir,
-			IEnumerable<string> namespaceMapping
+		private static Task ParseSchemas(
+			global::Avro.CodeGen codeGen,
+			string rawSchema
 		) => Task.Run(() =>
 			{
-				var codeGen = new global::Avro.CodeGen();
 				var schema = global::Avro.Schema.Parse(rawSchema);
-
 				codeGen.AddSchema(schema);
-
-				if (namespaceMapping != null)
-				{
-					foreach (var mapping in namespaceMapping)
-					{
-						var parts = mapping.Split(':');
-						codeGen.NamespaceMapping[parts[0]] = parts[1];
-					}
-				}
-
-				codeGen.GenerateCode();
-				codeGen.WriteTypes(outputDir);
 			});
 
 		private static async Task<IEnumerable<string>> GetSchemas(string schemaPath, string subjectPattern = ".*")
