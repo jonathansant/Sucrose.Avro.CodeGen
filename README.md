@@ -8,7 +8,17 @@
 
 ```
 avromagic \
---registry-url https://xxx.dev/schema-registry \
+--schema-path https://xxx.dev/schema-registry \
+--subject-pattern user-.* \
+--output-dir ./autogen \
+--namespace-mapping com.somcompany.user:SomeCompany.User
+```
+
+OR
+
+```
+avromagic \
+--schema-path "./schemas" \
 --subject-pattern user-.* \
 --output-dir ./autogen \
 --namespace-mapping com.somcompany.user:SomeCompany.User
