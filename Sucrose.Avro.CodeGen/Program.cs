@@ -66,11 +66,22 @@ namespace Sucrose.Avro.CodeGen
 		private static async Task<IEnumerable<string>> GetSchemas(string schemaPath, string subjectPattern = ".*")
 		{
 			if (!schemaPath.StartsWith("http"))
+			{
+				if (schemaPath.StartsWith("~/"))
+				{
+					// hack around the fact that ~/ is not evaluated by the runtime
+					schemaPath = schemaPath.Replace(
+						"~",
+						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+					);
+				}
+				
 				return await Task.WhenAll(Directory
-							.GetFiles(schemaPath, "*.avsc", SearchOption.AllDirectories)
-							.Where(path => Regex.IsMatch(path, subjectPattern))
-							.Select(path => File.ReadAllTextAsync(path)))
-							.ContinueWith(schemaPromise => schemaPromise.Result);
+						.GetFiles(schemaPath, "*.avsc", SearchOption.AllDirectories)
+						.Where(path => Regex.IsMatch(path, subjectPattern))
+						.Select(path => File.ReadAllTextAsync(path)))
+					.ContinueWith(schemaPromise => schemaPromise.Result);
+			}
 
 			var registry = new CachedSchemaRegistryClient(
 				new SchemaRegistryConfig
