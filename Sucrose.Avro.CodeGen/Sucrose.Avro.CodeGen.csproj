@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>avromagic</ToolCommandName>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <!--vendor-->
