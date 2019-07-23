@@ -1,6 +1,6 @@
 {
   "name": "sucrose.avro.codegen",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "avromagic auto-magically generates C# classes from an Avro Schema Registry.",
   "solution": "Sucrose.Avro.CodeGen-build.sln",
   "dependencies": {},
