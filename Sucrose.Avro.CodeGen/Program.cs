@@ -1,4 +1,4 @@
-using Confluent.SchemaRegistry;
+﻿using Confluent.SchemaRegistry;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +26,7 @@ namespace Sucrose.Avro.CodeGen
 		{
 			try
 			{
+				Console.WriteLine($"Loading schemas from [{schemaPath}]");
 				var schemas = await GetSchemas(schemaPath, subjectPattern);
 
 				var codeGen = new global::Avro.CodeGen();
@@ -42,8 +43,13 @@ namespace Sucrose.Avro.CodeGen
 					schemas.Select(schema => ParseSchemas(codeGen, schema))
 				);
 
+				Console.WriteLine($"Generating code ...");
 				codeGen.GenerateCode();
+				
+				Console.WriteLine($"Output code to [{Path.GetFullPath(outputDir)}]");
 				codeGen.WriteTypes(outputDir);
+
+				Console.WriteLine("Done");
 
 				return 0;
 			}
