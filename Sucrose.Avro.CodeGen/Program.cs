@@ -45,7 +45,7 @@ namespace Sucrose.Avro.CodeGen
 
 				Console.WriteLine($"Generating code ...");
 				codeGen.GenerateCode();
-				
+
 				Console.WriteLine($"Output code to [{Path.GetFullPath(outputDir)}]");
 				codeGen.WriteTypes(outputDir);
 
@@ -74,7 +74,7 @@ namespace Sucrose.Avro.CodeGen
 			using var textFile = file.OpenText();
 			var content = await textFile.ReadToEndAsync();
 
-			return ( file.Name, content );
+			return (file.Name, content);
 		}
 
 		private static async Task<(string subject, string content)> ReadSchemaFromRegistryAsync(
@@ -83,7 +83,7 @@ namespace Sucrose.Avro.CodeGen
 		)
 		{
 			var schema = await schemaRegistryClient.GetLatestSchemaAsync(subject);
-			return ( subject, schema.SchemaString );
+			return (subject, schema.SchemaString);
 		}
 
 		private static async Task<IEnumerable<(string subject, string content)>> GetSchemas(string schemaPath, string subjectPattern = ".*")
@@ -99,13 +99,13 @@ namespace Sucrose.Avro.CodeGen
 						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
 					);
 				}
-				
+
 				var directoryInfo = new DirectoryInfo(schemaPath);
 
 				promises = directoryInfo
 					.GetFiles("*.avsc", SearchOption.AllDirectories)
 					.Where(path => Regex.IsMatch(path.Name, subjectPattern))
-					.Select( ReadSchemaFromFileAsync );
+					.Select(ReadSchemaFromFileAsync);
 			}
 			else
 			{
@@ -114,14 +114,14 @@ namespace Sucrose.Avro.CodeGen
 					{
 						SchemaRegistryUrl = schemaPath
 					});
-				
+
 				promises = await registry.GetAllSubjectsAsync()
 					.ContinueWith(subjectPromise => subjectPromise.Result
 						.Where(subject => Regex.IsMatch(subject, subjectPattern))
 						.Select(subject => ReadSchemaFromRegistryAsync(registry, subject))
 					);
 			}
-			
+
 			return await Task.WhenAll(promises)
 				.ContinueWith(schemaPromise => schemaPromise.Result);
 		}
