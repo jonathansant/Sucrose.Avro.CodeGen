@@ -67,7 +67,7 @@ namespace Sucrose.Avro.CodeGen
 		{
 			if (!schemaPath.StartsWith("http"))
 				return await Task.WhenAll(Directory
-							.GetFiles(schemaPath)
+							.GetFiles(schemaPath, "*.avsc", SearchOption.AllDirectories)
 							.Where(path => Regex.IsMatch(path, subjectPattern))
 							.Select(path => File.ReadAllTextAsync(path)))
 							.ContinueWith(schemaPromise => schemaPromise.Result);
