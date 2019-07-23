@@ -26,6 +26,7 @@ namespace Sucrose.Avro.CodeGen
 		{
 			try
 			{
+				Console.WriteLine($"Loading schemas from [{schemaPath}]");
 				var schemas = await GetSchemas(schemaPath, subjectPattern);
 
 				var codeGen = new global::Avro.CodeGen();
@@ -42,8 +43,13 @@ namespace Sucrose.Avro.CodeGen
 					schemas.Select(schema => ParseSchemas(codeGen, schema))
 				);
 
+				Console.WriteLine($"Generating code ...");
 				codeGen.GenerateCode();
+				
+				Console.WriteLine($"Output code to [{Path.GetFullPath(outputDir)}]");
 				codeGen.WriteTypes(outputDir);
+
+				Console.WriteLine("Done");
 
 				return 0;
 			}
@@ -56,36 +62,68 @@ namespace Sucrose.Avro.CodeGen
 
 		private static Task ParseSchemas(
 			global::Avro.CodeGen codeGen,
-			string rawSchema
+			(string subject, string content) schema
 		) => Task.Run(() =>
-			{
-				var schema = global::Avro.Schema.Parse(rawSchema);
-				codeGen.AddSchema(schema);
-			});
-
-		private static async Task<IEnumerable<string>> GetSchemas(string schemaPath, string subjectPattern = ".*")
 		{
+			Console.WriteLine($"[{schema.subject}] Parsing Schema ...");
+			codeGen.AddSchema(global::Avro.Schema.Parse(schema.content));
+		});
+
+		private static async Task<(string subject, string content)> ReadSchemaFromFileAsync(FileInfo file)
+		{
+			using var textFile = file.OpenText();
+			var content = await textFile.ReadToEndAsync();
+
+			return ( file.Name, content );
+		}
+
+		private static async Task<(string subject, string content)> ReadSchemaFromRegistryAsync(
+			ISchemaRegistryClient schemaRegistryClient,
+			string subject
+		)
+		{
+			var schema = await schemaRegistryClient.GetLatestSchemaAsync(subject);
+			return ( subject, schema.SchemaString );
+		}
+
+		private static async Task<IEnumerable<(string subject, string content)>> GetSchemas(string schemaPath, string subjectPattern = ".*")
+		{
+			IEnumerable<Task<(string subject, string content)>> promises;
 			if (!schemaPath.StartsWith("http"))
-				return await Task.WhenAll(Directory
-							.GetFiles(schemaPath)
-							.Where(path => Regex.IsMatch(path, subjectPattern))
-							.Select(path => File.ReadAllTextAsync(path)))
-							.ContinueWith(schemaPromise => schemaPromise.Result);
-
-			var registry = new CachedSchemaRegistryClient(
-				new SchemaRegistryConfig
+			{
+				if (schemaPath.StartsWith("~/"))
 				{
-					SchemaRegistryUrl = schemaPath
-				});
+					// hack around the fact that ~/ is not evaluated by the runtime
+					schemaPath = schemaPath.Replace(
+						"~",
+						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+					);
+				}
+				
+				var directoryInfo = new DirectoryInfo(schemaPath);
 
-			var promises = await registry.GetAllSubjectsAsync()
-				.ContinueWith(subjectPromise => subjectPromise.Result
-					.Where(subject => Regex.IsMatch(subject, subjectPattern))
-					.Select(async subject => await registry.GetLatestSchemaAsync(subject))
-				);
-
+				promises = directoryInfo
+					.GetFiles("*.avsc", SearchOption.AllDirectories)
+					.Where(path => Regex.IsMatch(path.Name, subjectPattern))
+					.Select( ReadSchemaFromFileAsync );
+			}
+			else
+			{
+				var registry = new CachedSchemaRegistryClient(
+					new SchemaRegistryConfig
+					{
+						SchemaRegistryUrl = schemaPath
+					});
+				
+				promises = await registry.GetAllSubjectsAsync()
+					.ContinueWith(subjectPromise => subjectPromise.Result
+						.Where(subject => Regex.IsMatch(subject, subjectPattern))
+						.Select(subject => ReadSchemaFromRegistryAsync(registry, subject))
+					);
+			}
+			
 			return await Task.WhenAll(promises)
-				.ContinueWith(schemaPromise => schemaPromise.Result.Select(schema => schema.SchemaString));
+				.ContinueWith(schemaPromise => schemaPromise.Result);
 		}
 	}
 }
