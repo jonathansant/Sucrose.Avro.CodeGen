@@ -112,7 +112,7 @@ namespace Sucrose.Avro.CodeGen
 				var registry = new CachedSchemaRegistryClient(
 					new SchemaRegistryConfig
 					{
-						SchemaRegistryUrl = schemaPath
+						Url = schemaPath
 					});
 
 				promises = await registry.GetAllSubjectsAsync()
