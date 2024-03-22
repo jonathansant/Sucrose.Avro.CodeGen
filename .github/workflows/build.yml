@@ -25,5 +25,5 @@ jobs:
     - name: Package
       run: dotnet pack Sucrose.Avro.CodeGen-build.sln -o . -c release
     - name: Push
-      run: dotnet nuget push ./*.nupkg -k $nuget_api_key -s "nuget.org"
+      run: dotnet nuget push ./*.nupkg -k xxx -s "https://api.nuget.org/v3/index.json"
   
