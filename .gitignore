@@ -262,3 +262,5 @@ __pycache__/
 
 # project items
 /stack.local.yml
+.DS_Store
+Sucrose.Avro.CodeGen/.DS_Store
