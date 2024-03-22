@@ -16,8 +16,14 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4.0.0
       with:
-        dotnet-version: '8.x' # specify your .NET version
-        dotnet-quality: 'signed' # specify your .NET version
+        dotnet-version: '8.x'
+        dotnet-quality: 'signed'
+    - name: Setup environmental variables
+      run: |
+        SOLUTION=$(node -p "require('./package.json').vsBuildSolution")
+        PACKAGE_VERSION=$(node -p "require('./package.json').version")
+        echo "SOLUTION=$SOLUTION" >> $GITHUB_ENV
+        echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
     - name: Restore dependencies
       run: dotnet restore Sucrose.Avro.CodeGen-build.sln
     - name: Build
@@ -25,5 +31,5 @@ jobs:
     - name: Package
       run: dotnet pack Sucrose.Avro.CodeGen-build.sln -o . -c release
     - name: Push
-      run: dotnet nuget push ./*.nupkg -k xxx -s "https://api.nuget.org/v3/index.json"
+      run: dotnet nuget push ./*.nupkg -k ${{ secrets.NUGET_KEY }} -s "https://api.nuget.org/v3/index.json"
   
