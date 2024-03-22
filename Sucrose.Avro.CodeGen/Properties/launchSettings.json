@@ -3,7 +3,7 @@
     "Execute": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
-      "commandLineArgs": "--schema-path /Users/jonathansant/git/kronos/kronos-models/src/main/avro/realtime --output-dir /Users/jonathansant/Library/CloudStorage/OneDrive-RiverTech/Desktop/penis/out/kronos.realtime.models"
+      "commandLineArgs": "--schema-path ### --output-dir ###"
     }
   }
 }
