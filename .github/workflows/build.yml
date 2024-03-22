@@ -20,12 +20,12 @@ jobs:
         dotnet-quality: 'signed' # specify your .NET version
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Sucrose.Avro.CodeGen-build.sln
 
     - name: Build
       run: dotnet build --no-restore
     - name: Package
       run:  |
-        dotnet pack Sucrose.Avro.CodeGen.sln -o ../../ -c release
+        dotnet pack Sucrose.Avro.CodeGen-build.sln -o ../../ -c release
         dotnet nuget push ../../*.nupkg -k $nuget_api_key -s "nuget.org"
   
