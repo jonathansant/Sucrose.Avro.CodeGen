@@ -23,7 +23,7 @@ jobs:
       run: dotnet restore Sucrose.Avro.CodeGen-build.sln
 
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Sucrose.Avro.CodeGen-build.sln --no-restore
     - name: Package
       run:  |
         dotnet pack Sucrose.Avro.CodeGen-build.sln -o ../../ -c release
