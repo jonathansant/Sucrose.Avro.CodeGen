@@ -41,16 +41,7 @@ namespace Sucrose.Avro.CodeGen
 					}
 				}
 
-				var schemaList = schemas.ToList();
-				var dependencySchema = schemaList.Single(x => x.subject.Equals("PlayerRecord.avsc"));
-				var dependentSchemas = schemaList.Where(x => !x.subject.Equals("PlayerRecord.avsc"));
-				var reorderedSchemas = new List<(string subject, string content)> { dependencySchema }.Concat(dependentSchemas);
-				var parsedSchemas = new SchemaNames();
-
-				foreach (var schema in reorderedSchemas)
-				{
-					ParseSchema(codeGen, schema, parsedSchemas);
-				}
+				ParseSchemas(codeGen, schemas);
 
 				Console.WriteLine($"Generating code ...");
 				codeGen.GenerateCode();
@@ -69,11 +60,41 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static void ParseSchema(
-			global::Avro.CodeGen codeGen,
-			(string subject, string content) schema,
-			SchemaNames parsedSchemas
-		)
+		private static void ParseSchemas(global::Avro.CodeGen codeGen, IEnumerable<(string subject, string content)> schemas)
+		{
+			var schemaList = schemas.ToList();
+			var parsed = new SchemaNames();
+			List<(string subject, string content)> successful;
+
+			do
+			{
+				successful = [];
+
+				foreach (var schema in schemaList)
+				{
+					try
+					{
+						ParseSchema(codeGen, schema, parsed);
+						successful.Add(schema);
+					}
+					catch (SchemaParseException e)
+					{
+						Console.WriteLine($"[{schema.subject}] Failed parsing Schema; '{e.Message}'. Will retry ...");
+					}
+				}
+
+				schemaList = schemaList.Except(successful).ToList();
+
+			} while (schemaList.Count > 0 && successful.Count > 0);
+
+			if (schemaList.Count <= 0) return;
+
+			var schemaNames = schemaList.Select(x => x.subject);
+			var failedList = string.Join(", ", schemaNames);
+			Console.WriteLine($"The following schema subjects were not successfully parsed: [{failedList}]");
+		}
+
+		private static void ParseSchema(global::Avro.CodeGen codeGen, (string subject, string content) schema, SchemaNames parsedSchemas)
 		{
 			Console.WriteLine($"[{schema.subject}] Parsing Schema ...");
 
