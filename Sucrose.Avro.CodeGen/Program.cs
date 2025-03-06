@@ -60,63 +60,83 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static void ParseSchemas(global::Avro.CodeGen codeGen, IEnumerable<(string subject, string content)> schemas)
+		/// <summary>
+		/// Iteratively parses a list of schemas.
+		/// <i>On the first iteration all the schemas that do not reference other schemas should be successfully parsed.
+		/// On subsequent iterations, the schemas that weren't parsed (ie. the ones referencing other schemas) are
+		/// iteratively retried, until either all are successfully parsed or no more progress is made.</i>
+		/// </summary>
+		private static void ParseSchemas(
+			global::Avro.CodeGen codeGen,
+			IEnumerable<(string subject, string content)> schemas
+		)
 		{
 			var schemaList = schemas.ToList();
-			var parsed = new SchemaNames();
-			List<(string subject, string content)> successful;
-			var result = new ParsingResult(parsed, true);
+
+			List<(string subject, string content)> successfullyParsed;
+			var result = new ParsingResult(new SchemaNames(), true);
 			var iterationCount = 0;
 
 			do
 			{
 				Console.WriteLine($"\nParsing iteration {iterationCount++}");
-				successful = [];
+				successfullyParsed = [];
 
 				foreach (var schema in schemaList)
 				{
-					result = ParseSchema(codeGen, schema, result.Parsed);
+					result = TryParseSchema(codeGen, schema, result.SchemaNames);
 
 					if (result.Success)
 					{
-						successful.Add(schema);
+						successfullyParsed.Add(schema);
 					}
 				}
 
-				schemaList = schemaList.Except(successful).ToList();
+				// remove the successfully parsed schemas from the list for next iteration
+				schemaList = schemaList.Except(successfullyParsed).ToList();
 
-			} while (schemaList.Count > 0 && successful.Count > 0);
+			} while (schemaList.Count > 0 && successfullyParsed.Count > 0); // repeat until no more schemas to parse, or no progress is made
 
+			// all schemas successfully parsed
 			if (schemaList.Count <= 0) return;
 
 			var failedList = string.Join(", ", schemaList.Select(x => x.subject));
 			Console.WriteLine($"The following schema subjects were not successfully parsed: [{failedList}]");
 		}
 
-		private static ParsingResult ParseSchema(global::Avro.CodeGen codeGen, (string subject, string content) schema, SchemaNames parsedSchemas)
+		/// <summary>
+		/// Tries to parse the schema and adds it to the codeGen.
+		/// </summary>
+		/// <returns>If parsing succeeds, returns the latest schemaNames, else returns the original.</returns>
+		private static ParsingResult TryParseSchema(
+			global::Avro.CodeGen codeGen,
+			(string subject, string content) schema,
+			SchemaNames schemaNames
+		)
 		{
 			Console.WriteLine($"\n[{schema.subject}] Parsing Schema ...");
 
-			var originalParsedSchema = parsedSchemas.Clone();
+			// when Schema.Parse fails, it leaves partial results in schemaNames
+			var originalSchemaNames = schemaNames.Clone();
 			Schema parsedSchema;
 
 			try
 			{
-				parsedSchema = Schema.Parse(schema.content, parsedSchemas);
+				parsedSchema = Schema.Parse(schema.content, schemaNames);
 			}
 			catch (SchemaParseException e)
 			{
 				Console.WriteLine($"[{schema.subject}] Failed parsing Schema; '{e.Message}'.");
-				return new ParsingResult(originalParsedSchema, false);
+
+				// if we return the partial results of a failed parse (e.g. 2 out of 3 schema names added to schemaNames),
+				// the next iteration will throw on duplicate schema names
+				return new ParsingResult(originalSchemaNames, false);
 			}
 
-			if(parsedSchema != null)
-			{
-				codeGen.AddSchema(parsedSchema);
-			}
+			codeGen.AddSchema(parsedSchema);
 
 			Console.WriteLine($"[{schema.subject}] Done parsing Schema ...");
-			return new ParsingResult(parsedSchemas, true);
+			return new ParsingResult(schemaNames, true);
 		}
 
 		private static async Task<(string subject, string content)> ReadSchemaFromFileAsync(FileInfo file)
@@ -178,7 +198,7 @@ namespace Sucrose.Avro.CodeGen
 	}
 }
 
-internal record ParsingResult(SchemaNames Parsed, bool Success);
+internal record ParsingResult(SchemaNames SchemaNames, bool Success);
 
 internal static class Extensions
 {
