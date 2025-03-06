@@ -1,10 +1,12 @@
-﻿using Confluent.SchemaRegistry;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Avro;
+using Confluent.SchemaRegistry;
+using Schema = Avro.Schema;
 
 namespace Sucrose.Avro.CodeGen
 {
@@ -39,9 +41,16 @@ namespace Sucrose.Avro.CodeGen
 					}
 				}
 
-				await Task.WhenAll(
-					schemas.Select(schema => ParseSchemas(codeGen, schema))
-				);
+				var schemaList = schemas.ToList();
+				var dependencySchema = schemaList.Single(x => x.subject.Equals("PlayerRecord.avsc"));
+				var dependentSchemas = schemaList.Where(x => !x.subject.Equals("PlayerRecord.avsc"));
+				var reorderedSchemas = new List<(string subject, string content)> { dependencySchema }.Concat(dependentSchemas);
+				var parsedSchemas = new SchemaNames();
+
+				foreach (var schema in reorderedSchemas)
+				{
+					ParseSchema(codeGen, schema, parsedSchemas);
+				}
 
 				Console.WriteLine($"Generating code ...");
 				codeGen.GenerateCode();
@@ -60,14 +69,20 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static Task ParseSchemas(
+		private static void ParseSchema(
 			global::Avro.CodeGen codeGen,
-			(string subject, string content) schema
-		) => Task.Run(() =>
+			(string subject, string content) schema,
+			SchemaNames parsedSchemas
+		)
 		{
 			Console.WriteLine($"[{schema.subject}] Parsing Schema ...");
-			codeGen.AddSchema(global::Avro.Schema.Parse(schema.content));
-		});
+
+			var parsedSchema = Schema.Parse(schema.content, parsedSchemas);
+			parsedSchemas.Add((NamedSchema) parsedSchema);
+			codeGen.AddSchema(parsedSchema);
+
+			Console.WriteLine($"[{schema.subject}] Done parsing Schema ...");
+		}
 
 		private static async Task<(string subject, string content)> ReadSchemaFromFileAsync(FileInfo file)
 		{
