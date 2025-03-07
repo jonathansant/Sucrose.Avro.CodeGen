@@ -14,9 +14,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{A7869C0D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sucrose.Avro.CodeGen", "Sucrose.Avro.CodeGen\Sucrose.Avro.CodeGen.csproj", "{E55CB894-C640-4954-8F02-E96011355545}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{255EE3CF-E723-444C-AA9A-1ABFA6221912}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.main", "..\..\..\avro\lang\csharp\src\apache\main\Avro.main.csproj", "{713E58EB-DF55-4789-BCC4-F4A7F2B0F343}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{EF2EC4E3-E3AC-4D30-BA77-291615DF75ED}"
+	ProjectSection(SolutionItems) = preProject
+		libs\Avro.dll = libs\Avro.dll
+		libs\Confluent.Kafka.dll = libs\Confluent.Kafka.dll
+		libs\Confluent.SchemaRegistry.dll = libs\Confluent.SchemaRegistry.dll
+		libs\Confluent.SchemaRegistry.Serdes.Avro.dll = libs\Confluent.SchemaRegistry.Serdes.Avro.dll
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +32,6 @@ Global
 		{E55CB894-C640-4954-8F02-E96011355545}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E55CB894-C640-4954-8F02-E96011355545}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E55CB894-C640-4954-8F02-E96011355545}.Release|Any CPU.Build.0 = Release|Any CPU
-		{713E58EB-DF55-4789-BCC4-F4A7F2B0F343}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{713E58EB-DF55-4789-BCC4-F4A7F2B0F343}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{713E58EB-DF55-4789-BCC4-F4A7F2B0F343}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{713E58EB-DF55-4789-BCC4-F4A7F2B0F343}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -40,6 +40,5 @@ Global
 		SolutionGuid = {B97E544B-BDC9-4CCE-8E02-D3FB29EC6AC7}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{713E58EB-DF55-4789-BCC4-F4A7F2B0F343} = {255EE3CF-E723-444C-AA9A-1ABFA6221912}
 	EndGlobalSection
 EndGlobal
