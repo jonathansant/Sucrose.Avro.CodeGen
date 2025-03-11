@@ -1,10 +1,12 @@
-﻿using Confluent.SchemaRegistry;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Avro;
+using Confluent.SchemaRegistry;
+using Schema = Avro.Schema;
 
 namespace Sucrose.Avro.CodeGen
 {
@@ -39,11 +41,9 @@ namespace Sucrose.Avro.CodeGen
 					}
 				}
 
-				await Task.WhenAll(
-					schemas.Select(schema => ParseSchemas(codeGen, schema))
-				);
+				ParseSchemas(codeGen, schemas);
 
-				Console.WriteLine($"Generating code ...");
+				Console.WriteLine($"\nGenerating code ...");
 				codeGen.GenerateCode();
 
 				Console.WriteLine($"Output code to [{Path.GetFullPath(outputDir)}]");
@@ -60,14 +60,84 @@ namespace Sucrose.Avro.CodeGen
 			}
 		}
 
-		private static Task ParseSchemas(
+		/// <summary>
+		/// Iteratively parses a list of schemas.
+		/// <i>On the first iteration all the schemas that do not reference other schemas should be successfully parsed.
+		/// On subsequent iterations, the schemas that weren't parsed (ie. the ones referencing other schemas) are
+		/// iteratively retried, until either all are successfully parsed or no more progress is made.</i>
+		/// </summary>
+		private static void ParseSchemas(
 			global::Avro.CodeGen codeGen,
-			(string subject, string content) schema
-		) => Task.Run(() =>
+			IEnumerable<(string subject, string content)> schemas
+		)
 		{
-			Console.WriteLine($"[{schema.subject}] Parsing Schema ...");
-			codeGen.AddSchema(global::Avro.Schema.Parse(schema.content));
-		});
+			var schemaList = schemas.ToList();
+
+			List<(string subject, string content)> successfullyParsed;
+			var result = new ParsingResult(new SchemaNames(), true);
+			var iterationCount = 0;
+
+			do
+			{
+				Console.WriteLine($"\nParsing iteration {iterationCount++}");
+				successfullyParsed = [];
+
+				foreach (var schema in schemaList)
+				{
+					result = TryParseSchema(codeGen, schema, result.SchemaNames);
+
+					if (result.Success)
+					{
+						successfullyParsed.Add(schema);
+					}
+				}
+
+				// remove the successfully parsed schemas from the list for next iteration
+				schemaList = schemaList.Except(successfullyParsed).ToList();
+
+			} while (schemaList.Count > 0 && successfullyParsed.Count > 0); // repeat until no more schemas to parse, or no progress is made
+
+			// all schemas successfully parsed
+			if (schemaList.Count <= 0) return;
+
+			var failedList = string.Join(", ", schemaList.Select(x => x.subject));
+			Console.WriteLine($"The following schema subjects were not successfully parsed: [{failedList}]");
+		}
+
+		/// <summary>
+		/// Tries to parse the schema and adds it to the codeGen.
+		/// </summary>
+		/// <returns>If parsing succeeds, returns the latest schemaNames, else returns the original.</returns>
+		private static ParsingResult TryParseSchema(
+			global::Avro.CodeGen codeGen,
+			(string subject, string content) schema,
+			SchemaNames schemaNames
+		)
+		{
+			Console.WriteLine($"\n[{schema.subject}] Parsing Schema ...");
+
+			// when Schema.Parse fails, it leaves partial results in schemaNames
+			var originalSchemaNames = schemaNames.Clone();
+			Schema parsedSchema;
+
+			try
+			{
+				parsedSchema = Schema.Parse(schema.content, schemaNames);
+			}
+			catch (SchemaParseException e)
+			{
+				Console.WriteLine($"[{schema.subject}] Failed parsing Schema; '{e.Message}'.");
+
+				// if we return the partial results of a failed parse (e.g. 2 out of 3 schema names added to schemaNames),
+				// the next iteration will throw on duplicate schema names
+				return new ParsingResult(originalSchemaNames, false);
+			}
+
+			codeGen.AddSchema(parsedSchema);
+
+			Console.WriteLine($"[{schema.subject}] Done parsing Schema ...");
+			return new ParsingResult(schemaNames, true);
+		}
 
 		private static async Task<(string subject, string content)> ReadSchemaFromFileAsync(FileInfo file)
 		{
@@ -125,5 +195,22 @@ namespace Sucrose.Avro.CodeGen
 			return await Task.WhenAll(promises)
 				.ContinueWith(schemaPromise => schemaPromise.Result);
 		}
+	}
+}
+
+internal record ParsingResult(SchemaNames SchemaNames, bool Success);
+
+internal static class Extensions
+{
+	internal static SchemaNames Clone(this SchemaNames schemaNames)
+	{
+		var newSchemaNames = new SchemaNames();
+
+		foreach (var schema in schemaNames)
+		{
+			newSchemaNames.Add(schema.Value);
+		}
+
+		return newSchemaNames;
 	}
 }

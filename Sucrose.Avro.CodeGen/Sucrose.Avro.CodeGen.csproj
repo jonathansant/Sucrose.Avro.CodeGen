@@ -10,12 +10,27 @@
 
   <!--vendor-->
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.CodeDom" Version="8.0.0" />
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.3.0-alpha.19317.1" />
-    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="2.3.0" />
   </ItemGroup>
 
   <!--libs-->
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Avro">
+      <HintPath>..\libs\Avro.dll</HintPath>
+    </Reference>
+    <Reference Include="Confluent.Kafka">
+      <HintPath>..\libs\Confluent.Kafka.dll</HintPath>
+    </Reference>
+    <Reference Include="Confluent.SchemaRegistry">
+      <HintPath>..\libs\Confluent.SchemaRegistry.dll</HintPath>
+    </Reference>
+    <Reference Include="Confluent.SchemaRegistry.Serdes.Avro">
+      <HintPath>..\libs\Confluent.SchemaRegistry.Serdes.Avro.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
